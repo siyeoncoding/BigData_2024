@@ -2,6 +2,16 @@ import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
 
+import folium
+from folium import Choropleth
+from folium.plugins import MarkerCluster
+import geopandas as gpd
+
+
+
+
+
+
 # 1. 노인교통사고 엑셀 파일 불러오기
 traffic_accidents = pd.read_excel('C:/Users/siso7/BigData_2024/exel/노인교통사고.xlsx')
 
@@ -85,4 +95,34 @@ print(accident_summary_cleaned_sorted)
 
 #accident_summary_cleaned_sorted.to_excel('C:/Users/siso7/BigData_2024/exel/result.xlsx', index=False)
 
+print("-----------------------------------------------------------------")
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from matplotlib import font_manager
+plt.rcParams['font.family'] ='Malgun Gothic'
+plt.rcParams['axes.unicode_minus'] =False
+# 한글 폰트 설정 (한글 폰트가 설치된 경로를 지정)
+#font_path = 'C:/Windows/Fonts/malgun.ttf'  # Windows에서는 C:/Windows/Fonts/NanumGothic.ttf
+#font_prop = font_manager.FontProperties(fname=font_path)
+
+# 사고 건수를 기준으로 내림차순 정렬한 데이터
+accident_summary_cleaned_sorted = accident_summary_cleaned.sort_values(by='사고건수', ascending=False)
+
+# 상위 10개 구역만 선택 (변경 가능)
+top_10_accidents = accident_summary_cleaned_sorted.head(10)
+
+# 시각화
+plt.figure(figsize=(12, 6))
+sns.barplot(x='사고건수', y='구_동', data=top_10_accidents, palette='viridis')
+
+# 제목과 축 레이블 설정
+plt.title('Top 10 사고 건수가 많은 구_동', fontsize=16)
+plt.xlabel('사고 건수', fontsize=12)
+plt.ylabel('구_동', fontsize=12)
+
+# 차트 표시
+plt.show()
 

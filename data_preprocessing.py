@@ -54,3 +54,128 @@ else:
 
 # 결과 데이터프레임 출력 (선택 사항)
 print(df1[['횡단보도관리번호', '구코드', '구이름', '동코드', '동이름']].head(3))
+
+# 첫 번째 시트만 csv 파일로 저장
+#df1.to_csv('/content/결과.csv', index=False)
+
+# 열 이름에 공백이 포함되어 있는 경우 처리
+#df1.columns = df1.columns.str.strip()
+
+# 공사형태가 공백인 행을 삭제
+df_cleaned = df1[df1['공사형태 (공통)'] != ' ']
+
+# 횡단보도종류코드가 5 또는 6인 행을 제거
+df_cleaned = df_cleaned[~df_cleaned['횡단보도종류코드'].isin([5, 6])]
+
+df_cleaned = df_cleaned.dropna(subset=['상태 (공통)', '횡단보도종류코드', '동이름', '공사형태 (공통)'])
+# '구이름'과 '동이름'을 합쳐서 새로운 열 '구_동' 생성
+df_cleaned['구_동'] = df_cleaned['구이름'] + ' ' + df_cleaned['동이름']
+
+
+
+total_rows = df_cleaned.shape[0]
+print(f"결측치 제거 후 총 행의 개수: {total_rows}")
+
+#print("상태 열의 고유값:", unique_status)
+#print("횡단보도종류코드 열의 고유값:", unique_crosswalk_type)
+#print("공사형태 열의 고유값:", unique_construction_type)
+# 'cleaned_crosswalk.csv'로 저장
+#df_cleaned.to_csv('/content/cleaned_crosswalk.csv', index=False)
+
+
+# 1. 상태별 열을 생성하여 '구_동'별로 상태 개수 계산
+df_status = df_cleaned.pivot_table(
+    index='구_동',
+    columns='상태 (공통)',
+    aggfunc='size',
+    fill_value=0
+).reset_index()
+
+# 2. 횡단보도종류코드별 열을 생성하여 '구_동'별로 횡단보도종류코드 개수 계산
+df_crosswalk_type = df_cleaned.pivot_table(
+    index='구_동',
+    columns='횡단보도종류코드',
+    aggfunc='size',
+    fill_value=0
+).reset_index()
+
+# 3. 공사형태별 열을 생성하여 '구_동'별로 공사형태 개수 계산
+df_construction_type = df_cleaned.pivot_table(
+    index='구_동',
+    columns='공사형태 (공통)',
+    aggfunc='size',
+    fill_value=0
+).reset_index()
+
+# 4. 다른 열들(횡단보도 개수, 횡단보도종류코드 개수, 공사형태 개수)도 구_동별로 그룹화하여 추가
+df_additional = df_cleaned.groupby('구_동').agg(
+    횡단보도_개수=('구_동', 'size')  # 횡단보도 개수
+).reset_index()
+
+
+
+
+# 5. 상태, 횡단보도종류코드, 공사형태 데이터를 모두 병합
+df_final = pd.merge(df_status, df_crosswalk_type, on='구_동', how='left')
+df_final = pd.merge(df_final, df_construction_type, on='구_동', how='left')
+df_final = pd.merge(df_final, df_additional, on='구_동', how='left')
+
+
+
+# 열 이름 변경
+df_final.columns = [
+    '구_동', '상태_양호', '상태_파손', '상태_도색', '상태_노후',
+    '종류_1', '종류_2', '종류_3', '종류_4',
+    '공사_1', '공사_2', '공사_3', '공사_4', '공사_5', '공사_6', '공사_8', '공사_9', '공사_10',
+    '횡단보도_개수'
+]
+
+# 상태, 횡단보도종류코드, 공사형태의 고유값 출력
+unique_status = df_cleaned['상태 (공통)'].unique()
+unique_crosswalk_type = df_cleaned['횡단보도종류코드'].unique()
+unique_construction_type = df_cleaned['공사형태 (공통)'].unique()
+
+# 횡단보도종류코드가 5 또는 6인 행을 제거
+# 남길 고유값 설정
+desired_values = [1.0, 2.0, 3.0, 4.0]
+
+# 필터링하여 새로운 데이터프레임 생성
+
+df_cleaned = df_cleaned[~df_cleaned['횡단보도종류코드'].isin(['5.0', '6.0'])]
+
+df_cleaned = df_cleaned[df_cleaned['공사형태 (공통)'] != ' ']
+
+
+print("상태 열의 고유값:", unique_status)
+print("횡단보도종류코드 열의 고유값:", unique_crosswalk_type)
+print("공사형태 열의 고유값:", unique_construction_type)
+
+print("--------------------------------------------------------")
+# 결과 출력
+print(df_final.head())
+df_final.describe()
+
+print("--------------------------------------------------------")
+# 데이터 출력
+print(df_final.head())  # 첫 5개 행 출력
+print("--------------------------------------------------------")
+# describe 메서드로 통계 정보 출력
+df_final_description = df_final.describe(include='all').fillna(0)  # 모든 열의 통계 정보 포함
+print(df_final_description)
+
+
+# 결과를 CSV 파일로 저장 -> 결과 확인.
+df_final_description.to_csv('C:/Users/siso7/BigData_2024/exel/crosswalk_grouped_cleaned.csv', index=False)
+
+
+
+
+
+
+
+
+
+
+
+
+
