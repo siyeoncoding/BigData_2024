@@ -1,5 +1,6 @@
 import pandas as pd
 import warnings
+
 warnings.filterwarnings("ignore")
 
 import folium
@@ -68,3 +69,51 @@ final_result = pd.merge(result, seoul_loc[['구_동', 'lat', 'lng']], on='구_�
 final_result.to_excel('final_result.xlsx', index=False)
 
 
+#
+# # 17. final_result 확인
+# print(final_result.head())
+#
+# # 18. 시각화: 서울 지도 만들기
+# smap = folium.Map(location=[37.4101597, 126.6783087], zoom_start=12)
+#
+# # 19. 사고 데이터 위치에 마커 추가
+# for name, lat, lng in zip(final_result['구_동'], final_result['lat'], final_result['lng']):
+#     if pd.notna(lat) and pd.notna(lng):  # 위도와 경도가 NaN이 아닐 경우
+#         folium.Marker([lat, lng], popup=name).add_to(smap)
+
+# 20. 결과 지도 저장
+#smap.save('C:/Users/siso7/BigData_2024/exel/seoul_accident_map.html')
+
+#print("지도 1 시각화.")
+# 10. 서울 지도 만들기
+
+# 11. GeoJSON 파일 경로 (서울 행정구역 경계 정보)
+g_geo = 'C:/Users/siso7/BigData_2024/exel/final_result.xlsx'  # 서울의 경계 GeoJSON 파일 경로로 수정
+threshold_scale = [3, 32, 61, 90, 119, 148, 178]
+# 12. Choropleth로 사고 건수에 따른 색상으로 구역 시각화
+folium.Choropleth(
+    geo_data=g_geo,  # GeoJSON 파일
+    data=final_result,  # 사고 데이터
+    columns=['구_동', '사고건수'],  # 구_동별 사고 건수
+    key_on='feature.properties.name',  # GeoJSON 속성에 해당하는 이름
+    fill_color='YlOrRd',  # 색상 설정 (Yellow to Red)
+    fill_opacity=0.7,  # 투명도
+    line_opacity=0.3,  # 경계선 투명도
+    threshold_scale=threshold_scale,  # 사고건수에 따른 구간
+).add_to(smap)
+
+# 13. 사고 위치에 마커 추가 (사고가 많은 지역을 강조)
+for name, lat, lng, accident_count in zip(final_result['구_동'], final_result['lat'], final_result['lng'], final_result['사고건수']):
+    if pd.notna(lat) and pd.notna(lng):  # 위도와 경도가 NaN이 아닐 경우
+        folium.CircleMarker([lat, lng],
+                            radius=8,  # 반지름
+                            color='red' if accident_count > 100 else 'blue',  # 사고 건수에 따라 색상
+                            fill=True,
+                            fill_opacity=0.7,
+                            popup=f'{name}: {accident_count}건 사고'
+                            ).add_to(smap)
+
+# 14. 지도 저장
+smap.save('C:/Users/siso7/BigData_2024/exel/seoul_accident_choropleth_map.html')
+
+print("사고 다발 구역 지도 파일이 저장되었습니다.")
