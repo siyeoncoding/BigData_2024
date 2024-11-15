@@ -54,41 +54,17 @@ print(accident_summary_cleaned.head())
 accident_summary_cleaned_sorted = accident_summary_cleaned.sort_values(by='사고건수', ascending=False)
 
 print("-----------------------------------------------------------------")
-# 결과 출력
-print(accident_summary_cleaned_sorted)
 
-# 12. 서울시 구별 경계 데이터를 불러오기
-seoul_gu_map = gpd.read_file('C:/Users/siso7/BigData_2024/exel/seoul.geojson')  # GeoJSON 파일 경로를 수정하세요
+result =pd.read_excel('C:/Users/siso7/BigData_2024/exel/result.xlsx')
+seoul_loc = pd.read_excel('C:/Users/siso7/BigData_2024/exel/seoul_loc.xlsx')
 
-# 13. '서울특별시'만 포함된 데이터 필터링
-seoul_gu_map = seoul_gu_map[seoul_gu_map['adm_nm'].str.contains('서울특별시')]
+# seoul_loc의 'gu'와 'dong'을 합쳐서 '구_동' 열 생성
+seoul_loc['구_동'] = seoul_loc['gu'] + ' ' + seoul_loc['dong']
 
-# '서울특별시' 부분 제거 (서울특별시만 남기고 구/동 이름 매칭)
-seoul_gu_map['adm_nm'] = seoul_gu_map['adm_nm'].str.replace('서울특별시 ', '')
+# result의 '구_동' 열과 seoul_loc의 '구_동' 열을 기준으로 병합
+final_result = pd.merge(result, seoul_loc[['구_동', 'lat', 'lng']], on='구_동', how='left')
 
-# 14. 사고 건수 데이터와 서울시 구별 경계를 병합합니다.
-merged = seoul_gu_map.set_index('adm_nm').join(accident_summary_cleaned_sorted.set_index('구_동'))
+# 병합된 데이터를 final_result.xlsx로 저장
+final_result.to_excel('final_result.xlsx', index=False)
 
-# 15. 사고 건수 시각화를 위한 Folium 지도 생성
-m = folium.Map(location=[37.5642135, 127.0016985], tiles='openstreetmap', zoom_start=11.2)
 
-# 16. 서울시 구별 사고 건수에 따른 색상 지도 추가
-choropleth = Choropleth(
-    geo_data=seoul_gu_map,
-    data=accident_summary_cleaned_sorted,
-    columns=['구_동', '사고건수'],
-    key_on='feature.properties.adm_nm',  # GeoJSON에서 구 이름을 가져옴
-    fill_color='YlOrRd',  # 사고 건수에 따라 색상 적용
-    fill_opacity=0.7,
-    line_opacity=0.2,
-    legend_name='사고 건수',
-    bins=[0, 10, 20, 50, 100, 150, 200],  # 사고 건수에 맞는 색상 구간 조정
-).add_to(m)
-
-folium.LayerControl().add_to(m)
-
-# 17. 지도를 HTML로 저장
-m.save('C:/Users/siso7/BigData_2024/exel/seoul_accident_map.html')
-
-# 18. 지도를 화면에 표시
-m
