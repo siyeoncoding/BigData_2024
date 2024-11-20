@@ -165,7 +165,7 @@ print(df_final_description)
 
 
 # 결과를 CSV 파일로 저장 -> 결과 확인.
-df_final_description.to_csv('C:/Users/siso7/BigData_2024/exel/crosswalk_grouped_cleaned.csv', index=False)
+#df_final_description.to_csv('C:/Users/siso7/BigData_2024/exel/crosswalk_grouped_cleaned.csv', index=False)
 
 
 

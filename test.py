@@ -125,4 +125,5 @@ plt.ylabel('구_동', fontsize=12)
 
 # 차트 표시
 plt.show()
-
+# 차트 이미지를 bar_result.png 파일로 저장
+plt.savefig('C:/Users/siso7/BigData_2024/exel/bar_result.png')

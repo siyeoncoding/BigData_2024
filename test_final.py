@@ -4,7 +4,7 @@ import json
 import numpy as np
 
 # 사고 데이터 불러오기
-final_result = pd.read_excel('C:/Users/siso7/BigData_2024/exel/final_result.xlsx')  # 경로에 맞게 수정
+final_result = pd.read_excel('C:/Users/siso7/BigData_2024/exel/final_result.xlsx')
 
 # GeoJSON 형식의 서울 행정동 경계 데이터 불러오기 (인코딩을 'utf-8'로 설정)
 geojson_file = 'C:/Users/siso7/BigData_2024/exel/서울_행정동.geojson'
